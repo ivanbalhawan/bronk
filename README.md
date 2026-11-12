@@ -56,7 +56,8 @@ sudo bootc rollback && systemctl reboot   # or pick the previous entry in the bo
 | Packages, services, other changes | [`build_files/build.sh`](./build_files/build.sh) |
 | Files to drop onto `/` | [`system_files/`](./system_files) |
 | CI build, sign and push | [`.github/workflows/build.yml`](./.github/workflows/build.yml) |
-| CI disk images (qcow2 / ISO) | [`.github/workflows/build-disk.yml`](./.github/workflows/build-disk.yml) |
+| Installer ISO settings | [`disk_config/iso.toml`](./disk_config/iso.toml) |
+| VM disk settings | [`disk_config/disk.toml`](./disk_config/disk.toml) |
 
 Local loop:
 
@@ -65,6 +66,13 @@ just build            # -> localhost/silverblue-custom:latest
 just build-qcow2      # disk image from the LOCAL build
 just run-vm-qcow2     # boot it
 just --list           # everything else
+```
+
+Installer ISO, built locally from the published image (only needed for new installs):
+
+```bash
+podman pull ghcr.io/ivanbalhawan/silverblue-custom:latest
+just build-iso ghcr.io/ivanbalhawan/silverblue-custom latest   # -> output/bootiso/install.iso
 ```
 
 Tags published by CI: `latest`, `45`, `YYYYMMDD`, `latest-YYYYMMDD`, plus

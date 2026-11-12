@@ -207,9 +207,9 @@ generate-build-tags $target_image=image_name $tag=default_tag:
         BUILD_TAGS+=("${tag}-${GIT_SHA}")
         BUILD_TAGS+=("${tag}-${DATE}-${GIT_SHA}")
         BUILD_TAGS+=("${DATE}-${GIT_SHA}")
-        BUILD_TAGS+=("45")
     fi
 
+    BUILD_TAGS+=("45")
     BUILD_TAGS+=("${DATE}")
     BUILD_TAGS+=("${tag}")
     BUILD_TAGS+=("${tag}-${DATE}")
