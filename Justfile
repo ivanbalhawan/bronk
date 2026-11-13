@@ -326,6 +326,10 @@ _build-bib $target_image $tag $type $config: (_rootful_load_image target_image t
       "${target_image}:${tag}"
 
     mkdir -p output
+    # mv can't replace a non-empty dir, so drop the previous build of the same type first
+    for item in "$BUILDTMP"/*; do
+      sudo rm -rf "output/$(basename "$item")"
+    done
     sudo mv -f $BUILDTMP/* output/
     sudo rmdir $BUILDTMP
     sudo chown -R $USER:$USER output/
