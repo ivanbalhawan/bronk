@@ -1,0 +1,3 @@
+docker:
+  ghcr.io/ivanbalhawan/brokkr:
+    use-sigstore-attachments: true
