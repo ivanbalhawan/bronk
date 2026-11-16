@@ -1,9 +1,9 @@
-# silverblue-custom
+# brokkr
 
 Personal Fedora Silverblue image built on
 [`ghcr.io/ublue-os/silverblue-main:45`](https://github.com/ublue-os/main).
 GitHub Actions builds it weekly, signs it with cosign and publishes it
-(privately) to `ghcr.io/ivanbalhawan/silverblue-custom`.
+(privately) to `ghcr.io/ivanbalhawan/brokkr`.
 
 ## What's different from silverblue-main
 
@@ -27,10 +27,10 @@ stock Silverblue doesn't know this image's signing key yet. The second
 enforces signatures:
 
 ```bash
-sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/ivanbalhawan/silverblue-custom:latest
+sudo rpm-ostree rebase ostree-unverified-registry:ghcr.io/ivanbalhawan/brokkr:latest
 systemctl reboot
 
-sudo rpm-ostree rebase ostree-image-signed:docker://ghcr.io/ivanbalhawan/silverblue-custom:latest
+sudo rpm-ostree rebase ostree-image-signed:docker://ghcr.io/ivanbalhawan/brokkr:latest
 systemctl reboot
 ```
 
@@ -38,7 +38,7 @@ systemctl reboot
 
 ```bash
 cosign login ghcr.io -u ivanbalhawan
-cosign verify --key cosign.pub ghcr.io/ivanbalhawan/silverblue-custom:latest
+cosign verify --key cosign.pub ghcr.io/ivanbalhawan/brokkr:latest
 ```
 
 ## Rollback
@@ -62,7 +62,7 @@ sudo bootc rollback && systemctl reboot   # or pick the previous entry in the bo
 Local loop:
 
 ```bash
-just build            # -> localhost/silverblue-custom:latest
+just build            # -> localhost/brokkr:latest
 just build-qcow2      # disk image from the LOCAL build
 just run-vm-qcow2     # boot it
 just --list           # everything else
@@ -71,8 +71,8 @@ just --list           # everything else
 Installer ISO, built locally from the published image (only needed for new installs):
 
 ```bash
-podman pull ghcr.io/ivanbalhawan/silverblue-custom:latest
-just build-iso ghcr.io/ivanbalhawan/silverblue-custom latest   # -> output/bootiso/install.iso
+podman pull ghcr.io/ivanbalhawan/brokkr:latest
+just build-iso ghcr.io/ivanbalhawan/brokkr latest   # -> output/bootiso/install.iso
 ```
 
 Tags published by CI: `latest`, `45`, `YYYYMMDD`, `latest-YYYYMMDD`, plus
