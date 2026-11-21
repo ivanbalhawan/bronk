@@ -10,7 +10,7 @@ image: machine-specific secrets are set up on the machine after install.
 ## What's different from silverblue-main
 
 - Extra packages: `bat`, `btop`, `eza`, `fastfetch`, `fd-find`, `fzf`, `neovim`,
-  `pipx`, `ranger`, `ripgrep`, `uv`, `zoxide`
+  `pipx`, `ranger`, `ripgrep`, `tldr`, `uv`, `zoxide`
 - `podman.socket` enabled
 - Anything under [`system_files/`](./system_files) is copied onto `/`
 
