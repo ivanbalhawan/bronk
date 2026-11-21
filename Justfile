@@ -8,6 +8,7 @@ export image_keywords := env_var("IMAGE_KEYWORDS")
 export image_logo_url := env_var("IMAGE_LOGO_URL")
 export default_tag := env_var("DEFAULT_TAG")
 export bib_image := env_var("BIB_IMAGE")
+export image_builder_image := env_var("IMAGE_BUILDER_IMAGE")
 
 alias build-vm := build-qcow2
 alias rebuild-vm := rebuild-qcow2
@@ -292,15 +293,68 @@ _rootful_load_image $target_image=image_name $tag=default_tag:
         just sudoif podman pull "${target_image}:${tag}"
     fi
 
-# Build a bootc bootable image using Bootc Image Builder (BIB)
-# Converts a container image to a bootable image
+# Build a VM disk image with image-builder (the successor to bootc-image-builder)
+# Converts a container image to a bootable disk image
 # Parameters:
 #   target_image: The name of the image to build (ex. localhost/fedora)
 #   tag: The tag of the image to build (ex. latest)
-#   type: The type of image to build (ex. qcow2, raw, iso)
-#   config: The configuration file to use for the build (default: disk_config/disk.toml)
+#   type: The type of image to build (qcow2 or raw)
+#   config: The blueprint to use for the build (ex. disk_config/disk.toml)
+# Output: output/<type>/disk.<type>, replacing the previous build of that type
 
-# Example: just _rebuild-bib localhost/fedora latest qcow2 disk_config/disk.toml
+# Example: just _build-disk localhost/fedora latest qcow2 disk_config/disk.toml
+_build-disk $target_image $tag $type $config: (_rootful_load_image target_image tag)
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    BUILDTMP=$(mktemp -p "${PWD}" -d -t _build-disk.XXXXXXXXXX)
+
+    sudo podman run \
+      --rm \
+      -it \
+      --privileged \
+      --pull=newer \
+      --security-opt label=type:unconfined_t \
+      -v $(pwd)/${config}:/blueprint.toml:ro \
+      -v $BUILDTMP:/output \
+      -v /var/lib/containers/storage:/var/lib/containers/storage \
+      "${image_builder_image}" \
+      build \
+      --blueprint /blueprint.toml \
+      --output-dir /output \
+      --output-name disk \
+      --bootc-ref "${target_image}:${tag}" \
+      --bootc-default-fs ext4 \
+      "${type}"
+
+    # image-builder's file names differ from BIB's; keep output/<type>/disk.<type>
+    # so run-vm-* and the README stay valid
+    built=$(sudo find "$BUILDTMP" -type f -name "*.${type}" | head -n1)
+    if [[ -z "$built" ]]; then
+      echo "No .${type} file in the image-builder output:" >&2
+      sudo find "$BUILDTMP" >&2
+      exit 1
+    fi
+    sudo rm -rf "output/${type}"
+    sudo mkdir -p "output/${type}"
+    sudo mv -f "$built" "output/${type}/disk.${type}"
+    sudo rm -rf "$BUILDTMP"
+    sudo chown -R $USER:$USER output/
+
+# Podman builds the image from the Containerfile, then builds a VM disk image from it
+# Example: just _rebuild-disk localhost/fedora latest qcow2 disk_config/disk.toml
+_rebuild-disk $target_image $tag $type $config: (build target_image tag) && (_build-disk target_image tag type config)
+
+# LEGACY, ISO only: build with bootc-image-builder's anaconda-iso type.
+# image-builder doesn't support anaconda-iso; this goes away when the ISO moves to
+# image-builder's generic-iso (IVA-59). Disk images use _build-disk above.
+# Parameters:
+#   target_image: The name of the image to build (ex. localhost/fedora)
+#   tag: The tag of the image to build (ex. latest)
+#   type: The type of image to build (iso)
+#   config: The configuration file to use for the build (ex. disk_config/iso.toml)
+
+# Example: just _build-bib localhost/fedora latest iso disk_config/iso.toml
 _build-bib $target_image $tag $type $config: (_rootful_load_image target_image tag)
     #!/usr/bin/env bash
     set -euo pipefail
@@ -346,11 +400,11 @@ _rebuild-bib $target_image $tag $type $config: (build target_image tag) && (_bui
 
 # Build a QCOW2 virtual machine image
 [group('Build Virtal Machine Image')]
-build-qcow2 $target_image=("localhost/" + image_name) $tag=default_tag: && (_build-bib target_image tag "qcow2" "disk_config/disk.toml")
+build-qcow2 $target_image=("localhost/" + image_name) $tag=default_tag: && (_build-disk target_image tag "qcow2" "disk_config/disk.toml")
 
 # Build a RAW virtual machine image
 [group('Build Virtal Machine Image')]
-build-raw $target_image=("localhost/" + image_name) $tag=default_tag: && (_build-bib target_image tag "raw" "disk_config/disk.toml")
+build-raw $target_image=("localhost/" + image_name) $tag=default_tag: && (_build-disk target_image tag "raw" "disk_config/disk.toml")
 
 # Build an ISO virtual machine image
 [group('Build Virtal Machine Image')]
@@ -358,11 +412,11 @@ build-iso $target_image=("localhost/" + image_name) $tag=default_tag: && (_build
 
 # Rebuild a QCOW2 virtual machine image
 [group('Build Virtal Machine Image')]
-rebuild-qcow2 $target_image=("localhost/" + image_name) $tag=default_tag: && (_rebuild-bib target_image tag "qcow2" "disk_config/disk.toml")
+rebuild-qcow2 $target_image=("localhost/" + image_name) $tag=default_tag: && (_rebuild-disk target_image tag "qcow2" "disk_config/disk.toml")
 
 # Rebuild a RAW virtual machine image
 [group('Build Virtal Machine Image')]
-rebuild-raw $target_image=("localhost/" + image_name) $tag=default_tag: && (_rebuild-bib target_image tag "raw" "disk_config/disk.toml")
+rebuild-raw $target_image=("localhost/" + image_name) $tag=default_tag: && (_rebuild-disk target_image tag "raw" "disk_config/disk.toml")
 
 # Rebuild an ISO virtual machine image
 [group('Build Virtal Machine Image')]
