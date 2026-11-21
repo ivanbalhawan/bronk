@@ -3,7 +3,9 @@
 Personal Fedora Silverblue image built on
 [`ghcr.io/ublue-os/silverblue-main:45`](https://github.com/ublue-os/main).
 GitHub Actions builds it weekly, signs it with cosign and publishes it
-(privately) to `ghcr.io/ivanbalhawan/bronk`.
+publicly to `ghcr.io/ivanbalhawan/bronk`. Pulling needs no login; machines
+trust it through the cosign signature. Never put secrets in this repo or the
+image: machine-specific secrets are set up on the machine after install.
 
 ## What's different from silverblue-main
 
@@ -13,14 +15,6 @@ GitHub Actions builds it weekly, signs it with cosign and publishes it
 - Anything under [`system_files/`](./system_files) is copied onto `/`
 
 ## Using it
-
-The package is private, so every client needs a GitHub classic PAT with only
-the `read:packages` scope:
-
-```bash
-sudo podman login --authfile /etc/ostree/auth.json ghcr.io -u ivanbalhawan
-sudo chmod 600 /etc/ostree/auth.json
-```
 
 From stock Silverblue, rebase in two steps. The first is unverified because
 stock Silverblue doesn't know this image's signing key yet. The second
@@ -37,7 +31,6 @@ systemctl reboot
 ## Verifying the signature
 
 ```bash
-cosign login ghcr.io -u ivanbalhawan
 cosign verify --key cosign.pub ghcr.io/ivanbalhawan/bronk:latest
 ```
 
