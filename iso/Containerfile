@@ -1,0 +1,92 @@
+# Installer image for the bronk ISO.
+#
+# It's bronk itself plus Anaconda. image-builder's generic-iso type turns it into an
+# ISO whose one boot entry, "Install bronk", boots straight into the Anaconda WebUI
+# (systemd.unit=anaconda.target): the installer-only setup upstream documents and tests.
+# Anaconda installs PAYLOAD_IMAGE with bootc (see the kickstart below).
+# Build: just build-iso [image] [tag]  (see the Justfile)
+
+# What the ISO boots (the image being turned into an ISO)
+ARG BASE_IMAGE=ghcr.io/ivanbalhawan/bronk:latest
+FROM ${BASE_IMAGE}
+
+# What Anaconda installs, and where the installed system gets its updates from
+ARG PAYLOAD_IMAGE=ghcr.io/ivanbalhawan/bronk:latest
+# ISO volume label; the boot entry finds the ISO's root filesystem by it
+ARG ISO_LABEL=bronk-installer
+
+# - installer: Anaconda + WebUI, as in upstream's WebUI installer example
+#   (osbuild/image-builder doc/20-advanced/20-bootc/10-isos.md). Firefox, mesa and
+#   fonts are already in bronk.
+# - booting from the ISO's squashfs: dracut-live
+# - tools generic-iso needs inside the image: xorriso, squashfs-tools, isomd5sum, GRUB files
+RUN dnf5 install -y \
+        anaconda \
+        anaconda-install-img-deps \
+        anaconda-dracut \
+        anaconda-webui \
+        cockpit-ws \
+        cockpit-bridge \
+        gnome-kiosk \
+        dracut-config-generic \
+        dracut-network \
+        dracut-live \
+        net-tools \
+        plymouth \
+        jq \
+        grub2-efi-x64-cdboot \
+        grub2-pc-modules \
+        xorriso \
+        squashfs-tools \
+        isomd5sum \
+    && dnf5 clean all
+
+# generic-iso takes shim and GRUB from /boot/efi/EFI/<vendor>
+RUN mkdir -p /boot/efi && cp -ra /usr/lib/efi/*/*/EFI /boot/efi
+
+# What lorax normally sets up for Anaconda; the minimum from upstream's example.
+# (Root has no password: only on the ISO, never on the installed system.)
+RUN echo "install:x:0:0:root:/root:/usr/libexec/anaconda/run-anaconda" >> /etc/passwd \
+    && echo "install::14438:0:99999:7:::" >> /etc/shadow \
+    && passwd -d root \
+    && mv /usr/share/anaconda/list-harddrives-stub /usr/bin/list-harddrives \
+    && rm -v /usr/lib/systemd/system-generators/systemd-gpt-auto-generator \
+    && mkdir -p "$(realpath /root)"
+
+# Initramfs that can boot the squashfs from the ISO (dmsquash-live) and start
+# Anaconda (anaconda), as upstream's example builds it
+RUN printf 'add_dracutmodules+=" dmsquash-live "\n' \
+        > /usr/lib/dracut/dracut.conf.d/40-bronk-live.conf \
+    && kernel=$(kernel-install list --json pretty | jq -r '.[] | select(.has_kernel == true) | .version') \
+    && DRACUT_NO_XATTR=1 dracut --force -v --zstd --reproducible --no-hostonly \
+        --add "anaconda dmsquash-live" \
+        "/usr/lib/modules/${kernel}/initramfs.img" "${kernel}"
+
+# Nothing on the ISO should try to update or rewrite the bootloader
+RUN systemctl mask \
+        rpm-ostreed-automatic.timer \
+        bootc-fetch-apply-updates.timer \
+        bootloader-update.service
+
+# Kickstart defaults (see interactive-defaults.ks): install PAYLOAD_IMAGE with bootc,
+# then switch the installed system to a signature-enforced origin (IVA-39)
+COPY interactive-defaults.ks /usr/share/anaconda/interactive-defaults.ks
+RUN sed -i "s|@PAYLOAD_IMAGE@|${PAYLOAD_IMAGE}|g" /usr/share/anaconda/interactive-defaults.ks \
+    && ! grep -n '@PAYLOAD_IMAGE@' /usr/share/anaconda/interactive-defaults.ks
+
+# Product info Anaconda reads (lorax normally writes it). Without IsFinal=True the
+# installer warns that this is pre-release software.
+RUN printf '%s\n' "[Main]" "Product=bronk" "Version=45" "IsFinal=True" > /.buildstamp
+
+# ISO layout and boot menu for generic-iso. Kernel and initrd paths are fixed by
+# generic-iso; enforcing=0 matches its default entry (SELinux labels in the squashfs).
+RUN mkdir -p /usr/lib/image-builder/bootc \
+    && printf '%s\n' \
+        "label: \"${ISO_LABEL}\"" \
+        "grub2:" \
+        "  timeout: 10" \
+        "  entries:" \
+        "    - name: \"Install bronk\"" \
+        "      linux: \"/images/pxeboot/vmlinuz root=live:CDLABEL=${ISO_LABEL} rd.live.image enforcing=0 systemd.unit=anaconda.target inst.webui rhgb quiet\"" \
+        "      initrd: \"/images/pxeboot/initrd.img\"" \
+        > /usr/lib/image-builder/bootc/iso.yaml

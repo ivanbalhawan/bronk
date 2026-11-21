@@ -44,13 +44,13 @@ sudo bootc rollback && systemctl reboot   # or pick the previous entry in the bo
 
 | What | Where |
 | --- | --- |
-| Image name, description, tags, BIB image | [`image-template.env`](./image-template.env) |
+| Image name, description, tags, image-builder image | [`image-template.env`](./image-template.env) |
 | Base image | [`Containerfile`](./Containerfile) |
 | Packages, services, other changes | [`build_files/build.sh`](./build_files/build.sh) |
 | Files to drop onto `/` | [`system_files/`](./system_files) |
 | CI build, sign and push | [`.github/workflows/build.yml`](./.github/workflows/build.yml) |
-| Installer ISO settings | [`disk_config/iso.toml`](./disk_config/iso.toml) |
-| VM disk settings | [`disk_config/disk.toml`](./disk_config/disk.toml) |
+| Installer ISO (Anaconda, kickstart, boot menu) | [`iso/Containerfile`](./iso/Containerfile) |
+| VM disk layout (image-builder blueprint) | [`disk_config/disk.toml`](./disk_config/disk.toml) |
 
 Local loop:
 
@@ -61,7 +61,10 @@ just run-vm-qcow2     # boot it
 just --list           # everything else
 ```
 
-Installer ISO, built locally from the published image (only needed for new installs):
+Installer ISO, built locally (only needed for new installs). It boots straight into
+the Anaconda WebUI, which installs the published, signed
+`ghcr.io/ivanbalhawan/bronk:latest` over the network, with signatures enforced from
+the first boot:
 
 ```bash
 podman pull ghcr.io/ivanbalhawan/bronk:latest

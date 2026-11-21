@@ -7,7 +7,6 @@ export image_desc := env_var("IMAGE_DESC")
 export image_keywords := env_var("IMAGE_KEYWORDS")
 export image_logo_url := env_var("IMAGE_LOGO_URL")
 export default_tag := env_var("DEFAULT_TAG")
-export bib_image := env_var("BIB_IMAGE")
 export image_builder_image := env_var("IMAGE_BUILDER_IMAGE")
 
 alias build-vm := build-qcow2
@@ -345,58 +344,64 @@ _build-disk $target_image $tag $type $config: (_rootful_load_image target_image 
 # Example: just _rebuild-disk localhost/fedora latest qcow2 disk_config/disk.toml
 _rebuild-disk $target_image $tag $type $config: (build target_image tag) && (_build-disk target_image tag type config)
 
-# LEGACY, ISO only: build with bootc-image-builder's anaconda-iso type.
-# image-builder doesn't support anaconda-iso; this goes away when the ISO moves to
-# image-builder's generic-iso (IVA-59). Disk images use _build-disk above.
+# Build the installer ISO with image-builder's generic-iso type
+# 1. builds the installer image (iso/Containerfile) on top of the given image
+# 2. image-builder turns it into an ISO that boots straight into the Anaconda WebUI
+# The ISO always installs the published, signed ghcr.io image (PAYLOAD_IMAGE in
+# iso/Containerfile); target_image/tag only choose what the installer runs on.
 # Parameters:
-#   target_image: The name of the image to build (ex. localhost/fedora)
-#   tag: The tag of the image to build (ex. latest)
-#   type: The type of image to build (iso)
-#   config: The configuration file to use for the build (ex. disk_config/iso.toml)
+#   target_image: The image the installer runs on (ex. ghcr.io/ivanbalhawan/bronk)
+#   tag: Its tag (ex. latest)
+# Output: output/bootiso/install.iso, replacing the previous ISO
 
-# Example: just _build-bib localhost/fedora latest iso disk_config/iso.toml
-_build-bib $target_image $tag $type $config: (_rootful_load_image target_image tag)
+# Example: just _build-installer-iso ghcr.io/ivanbalhawan/bronk latest
+_build-installer-iso $target_image $tag: (_rootful_load_image target_image tag)
     #!/usr/bin/env bash
     set -euo pipefail
 
-    args="--type ${type} "
-    args+="--use-librepo=True "
-    args+="--rootfs=btrfs"
+    installer_image="localhost/${image_name}-installer:latest"
 
-    BUILDTMP=$(mktemp -p "${PWD}" -d -t _build-bib.XXXXXXXXXX)
+    # The base is already in root's storage (_rootful_load_image), so don't pull it
+    sudo podman build \
+      --pull=never \
+      --build-arg BASE_IMAGE="${target_image}:${tag}" \
+      --file iso/Containerfile \
+      --tag "${installer_image}" \
+      iso/
+
+    BUILDTMP=$(mktemp -p "${PWD}" -d -t _build-iso.XXXXXXXXXX)
 
     sudo podman run \
       --rm \
       -it \
       --privileged \
       --pull=newer \
-      --net=host \
       --security-opt label=type:unconfined_t \
-      -v $(pwd)/${config}:/config.toml:ro \
       -v $BUILDTMP:/output \
       -v /var/lib/containers/storage:/var/lib/containers/storage \
-      "${bib_image}" \
-      ${args} \
-      "${target_image}:${tag}"
+      "${image_builder_image}" \
+      build \
+      --output-dir /output \
+      --output-name install \
+      --bootc-ref "${installer_image}" \
+      --bootc-default-fs ext4 \
+      generic-iso
 
-    mkdir -p output
-    # mv can't replace a non-empty dir, so drop the previous build of the same type first
-    for item in "$BUILDTMP"/*; do
-      sudo rm -rf "output/$(basename "$item")"
-    done
-    sudo mv -f $BUILDTMP/* output/
-    sudo rmdir $BUILDTMP
+    built=$(sudo find "$BUILDTMP" -type f -name "*.iso" | head -n1)
+    if [[ -z "$built" ]]; then
+      echo "No .iso file in the image-builder output:" >&2
+      sudo find "$BUILDTMP" >&2
+      exit 1
+    fi
+    sudo rm -rf output/bootiso
+    sudo mkdir -p output/bootiso
+    sudo mv -f "$built" output/bootiso/install.iso
+    sudo rm -rf "$BUILDTMP"
     sudo chown -R $USER:$USER output/
 
-# Podman builds the image from the Containerfile and creates a bootable image
-# Parameters:
-#   target_image: The name of the image to build (ex. localhost/fedora)
-#   tag: The tag of the image to build (ex. latest)
-#   type: The type of image to build (ex. qcow2, raw, iso)
-#   config: The configuration file to use for the build (deafult: disk_config/disk.toml)
-
-# Example: just _rebuild-bib localhost/fedora latest qcow2 disk_config/disk.toml
-_rebuild-bib $target_image $tag $type $config: (build target_image tag) && (_build-bib target_image tag type config)
+# Podman builds the image from the Containerfile, then builds the installer ISO from it
+# Example: just _rebuild-installer-iso localhost/fedora latest
+_rebuild-installer-iso $target_image $tag: (build target_image tag) && (_build-installer-iso target_image tag)
 
 # Build a QCOW2 virtual machine image
 [group('Build Virtal Machine Image')]
@@ -406,9 +411,9 @@ build-qcow2 $target_image=("localhost/" + image_name) $tag=default_tag: && (_bui
 [group('Build Virtal Machine Image')]
 build-raw $target_image=("localhost/" + image_name) $tag=default_tag: && (_build-disk target_image tag "raw" "disk_config/disk.toml")
 
-# Build an ISO virtual machine image
+# Build the installer ISO (Anaconda WebUI; installs the ghcr.io image)
 [group('Build Virtal Machine Image')]
-build-iso $target_image=("localhost/" + image_name) $tag=default_tag: && (_build-bib target_image tag "iso" "disk_config/iso.toml")
+build-iso $target_image=("localhost/" + image_name) $tag=default_tag: && (_build-installer-iso target_image tag)
 
 # Rebuild a QCOW2 virtual machine image
 [group('Build Virtal Machine Image')]
@@ -418,9 +423,9 @@ rebuild-qcow2 $target_image=("localhost/" + image_name) $tag=default_tag: && (_r
 [group('Build Virtal Machine Image')]
 rebuild-raw $target_image=("localhost/" + image_name) $tag=default_tag: && (_rebuild-disk target_image tag "raw" "disk_config/disk.toml")
 
-# Rebuild an ISO virtual machine image
+# Rebuild the image, then the installer ISO from it
 [group('Build Virtal Machine Image')]
-rebuild-iso $target_image=("localhost/" + image_name) $tag=default_tag: && (_rebuild-bib target_image tag "iso" "disk_config/iso.toml")
+rebuild-iso $target_image=("localhost/" + image_name) $tag=default_tag: && (_rebuild-installer-iso target_image tag)
 
 # Run a virtual machine with the specified image type and configuration
 _run-vm $target_image $tag $type $config:
@@ -474,7 +479,7 @@ run-vm-raw $target_image=("localhost/" + image_name) $tag=default_tag: && (_run-
 
 # Run a virtual machine from an ISO
 [group('Run Virtal Machine')]
-run-vm-iso $target_image=("localhost/" + image_name) $tag=default_tag: && (_run-vm target_image tag "iso" "disk_config/iso.toml")
+run-vm-iso $target_image=("localhost/" + image_name) $tag=default_tag: && (_run-vm target_image tag "iso" "iso/Containerfile")
 
 # Run a virtual machine using systemd-vmspawn
 [group('Run Virtal Machine')]
