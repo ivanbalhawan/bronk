@@ -5,19 +5,19 @@ set -ouex pipefail
 # Copy the contents of system_files/ of the git repo to /
 cp -avf "/ctx/system_files"/. /
 
-### Trust config: only accept brokkr images signed with our cosign key
-# The matching registries.d/brokkr.yaml comes from system_files/.
-install -Dm644 /ctx/cosign.pub /etc/pki/containers/brokkr.pub
+### Trust config: only accept bronk images signed with our cosign key
+# The matching registries.d/bronk.yaml comes from system_files/.
+install -Dm644 /ctx/cosign.pub /etc/pki/containers/bronk.pub
 # Add our entry to ublue's policy.json instead of replacing the file, so their rules stay.
-jq '.transports.docker["ghcr.io/ivanbalhawan/brokkr"] = [{
+jq '.transports.docker["ghcr.io/ivanbalhawan/bronk"] = [{
       "type": "sigstoreSigned",
-      "keyPath": "/etc/pki/containers/brokkr.pub",
+      "keyPath": "/etc/pki/containers/bronk.pub",
       "signedIdentity": {"type": "matchRepository"}
     }]' /etc/containers/policy.json > /tmp/policy.json
 mv /tmp/policy.json /etc/containers/policy.json
 chmod 644 /etc/containers/policy.json
 # Fail the build if the entry is missing.
-jq -e '.transports.docker["ghcr.io/ivanbalhawan/brokkr"][0].keyPath == "/etc/pki/containers/brokkr.pub"' /etc/containers/policy.json
+jq -e '.transports.docker["ghcr.io/ivanbalhawan/bronk"][0].keyPath == "/etc/pki/containers/bronk.pub"' /etc/containers/policy.json
 
 ### Install packages
 

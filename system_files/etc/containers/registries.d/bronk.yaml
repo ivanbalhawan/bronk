@@ -1,3 +1,3 @@
 docker:
-  ghcr.io/ivanbalhawan/brokkr:
+  ghcr.io/ivanbalhawan/bronk:
     use-sigstore-attachments: true
