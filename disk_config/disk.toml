@@ -1,3 +1,16 @@
-[[customizations.filesystem]]
-mountpoint = "/"
+# Blueprint for VM disk images, used by image-builder (just build-qcow2 / build-raw).
+#
+# Root is a btrfs volume with a "root" subvolume, like Fedora's atomic desktops.
+# image-builder only supports btrfs this way: `--bootc-default-fs btrfs` alone panics
+# ("unknown fs type: btrfs for /", image-builder v91). The Justfile passes
+# `--bootc-default-fs ext4`, which only applies to the other partitions (/boot).
+[customizations.disk]
 minsize = "20 GiB"
+
+[[customizations.disk.partitions]]
+type = "btrfs"
+minsize = "15 GiB"
+
+  [[customizations.disk.partitions.subvolumes]]
+  name = "root"
+  mountpoint = "/"
