@@ -1,0 +1,8 @@
+[Plymouth Theme]
+Name=Bronk
+Description=bronk_ boot splash: black screen, centred mark, blinking cursor
+ModuleName=script
+
+[script]
+ImageDir=/usr/share/plymouth/themes/bronk
+ScriptFile=/usr/share/plymouth/themes/bronk/bronk.script
