@@ -11,11 +11,12 @@
       "automerge": true,
       "matchUpdateTypes": ["pin", "pinDigest"]
     },
-    // This prevents the default demo image used in ublue-os/image-template
-    // from being pinned as it serves no purpose there
+    // Keep the base image on its moving tag. ublue rebuilds it about daily
+    // and the weekly build picks up the latest; pinning it would mean a
+    // digest-bump PR every day. Major bumps (e.g. 45 -> 46) still get a PR.
     {
       "matchDatasources": ["docker"],
-      "matchPackageNames": ["ghcr.io/ublue-os/bazzite"],
+      "matchPackageNames": ["ghcr.io/ublue-os/silverblue-main"],
       "pinDigests": false
     },
     {
