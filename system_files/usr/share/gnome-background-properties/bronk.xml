@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE wallpapers SYSTEM "gnome-wp-list.dtd">
+<wallpapers>
+  <wallpaper deleted="false">
+    <name>Bronk Terminal grid</name>
+    <filename>/usr/share/backgrounds/bronk/bronk-terminal-grid-light.png</filename>
+    <filename-dark>/usr/share/backgrounds/bronk/bronk-terminal-grid-dark.png</filename-dark>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#0d0d0d</pcolor>
+    <scolor>#0d0d0d</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Bronk Forge ember</name>
+    <filename>/usr/share/backgrounds/bronk/bronk-forge-ember-light.png</filename>
+    <filename-dark>/usr/share/backgrounds/bronk/bronk-forge-ember-dark.png</filename-dark>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#0d0d0d</pcolor>
+    <scolor>#0d0d0d</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Bronk Runic</name>
+    <filename>/usr/share/backgrounds/bronk/bronk-runic-light.png</filename>
+    <filename-dark>/usr/share/backgrounds/bronk/bronk-runic-dark.png</filename-dark>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#0d0d0d</pcolor>
+    <scolor>#0d0d0d</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Bronk One block</name>
+    <filename>/usr/share/backgrounds/bronk/bronk-one-block-light.png</filename>
+    <filename-dark>/usr/share/backgrounds/bronk/bronk-one-block-dark.png</filename-dark>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#0d0d0d</pcolor>
+    <scolor>#0d0d0d</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Bronk Tunnel</name>
+    <filename>/usr/share/backgrounds/bronk/bronk-tunnel-light.png</filename>
+    <filename-dark>/usr/share/backgrounds/bronk/bronk-tunnel-dark.png</filename-dark>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#0d0d0d</pcolor>
+    <scolor>#0d0d0d</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Bronk Yggdrasil</name>
+    <filename>/usr/share/backgrounds/bronk/bronk-yggdrasil-light.png</filename>
+    <filename-dark>/usr/share/backgrounds/bronk/bronk-yggdrasil-dark.png</filename-dark>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#0d0d0d</pcolor>
+    <scolor>#0d0d0d</scolor>
+  </wallpaper>
+  <wallpaper deleted="false">
+    <name>Bronk Horizon</name>
+    <filename>/usr/share/backgrounds/bronk/bronk-horizon-light.png</filename>
+    <filename-dark>/usr/share/backgrounds/bronk/bronk-horizon-dark.png</filename-dark>
+    <options>zoom</options>
+    <shade_type>solid</shade_type>
+    <pcolor>#0d0d0d</pcolor>
+    <scolor>#0d0d0d</scolor>
+  </wallpaper>
+</wallpapers>
