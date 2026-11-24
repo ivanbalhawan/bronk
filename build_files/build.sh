@@ -30,6 +30,8 @@ jq -e '.transports.docker["ghcr.io/ivanbalhawan/bronk"][0].keyPath == "/etc/pki/
 # Both use the org.mozilla.firefox app ID, so the dock pin and default browser
 # in GNOME's defaults keep working. Done before the guard below on purpose.
 dnf5 remove -y firefox firefox-langpacks
+# htop and nvtop: Resources and btop cover them (IVA-67). Nothing depends on either.
+dnf5 remove -y htop nvtop
 
 # Guard: record the base image's packages, to check below that the install
 # doesn't change any of them (IVA-23)
@@ -71,7 +73,8 @@ if [[ -n "$changed" ]]; then
 fi
 echo "Base package check passed; $(LC_ALL=C comm -13 /tmp/rpms-base.txt /tmp/rpms-after.txt | wc -l) packages added (or allowed changes)"
 
-
+### Fonts: IosevkaTerm and JetBrains Mono Nerd Fonts (IVA-66)
+/ctx/fonts.sh
 
 # Use a COPR Example:
 #
@@ -80,11 +83,17 @@ echo "Base package check passed; $(LC_ALL=C comm -13 /tmp/rpms-base.txt /tmp/rpm
 # Disable COPRs so they don't end up enabled on the final image:
 # dnf5 -y copr disable ublue-os/staging
 
+### App grid: hide extras, default folders (IVA-67)
+/ctx/launcher.sh
+
 #### Example for enabling a System Unit File
 
 systemctl enable podman.socket
 # Installs the Flatpak apps in /usr/share/flatpak/preinstall.d at boot (IVA-43)
 systemctl enable bronk-flatpak-preinstall.service
+
+### Branding: os-release name, logos, login screen, boot splash, fastfetch (IVA-65)
+/ctx/branding.sh
 
 #### Smoke checks: fail the build if an installed tool doesn't run (IVA-23)
 # Keep in sync with the dnf5 install list above: "<package> <command to run>"
