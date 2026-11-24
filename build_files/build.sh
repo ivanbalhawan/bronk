@@ -22,9 +22,9 @@ jq -e '.transports.docker["ghcr.io/ivanbalhawan/bronk"][0].keyPath == "/etc/pki/
 ### Install packages
 
 # Packages can be installed from any enabled yum repo on the image.
-# RPMfusion repos are available by default in ublue main images
-# List of rpmfusion packages can be found here:
-# https://mirrors.rpmfusion.org/mirrorlist?path=free/fedora/updates/43/x86_64/repoview/index.html&protocol=https&redirect=1
+# ublue main images don't ship RPM Fusion: codecs (ffmpeg, Mesa VA-API drivers)
+# come from negativo17's fedora-multimedia repo. Don't add RPM Fusion, its
+# packages conflict with negativo17's (IVA-45).
 
 # Guard: record the base image's packages, to check below that the install
 # doesn't change any of them (IVA-23)
@@ -78,6 +78,8 @@ echo "Base package check passed; $(LC_ALL=C comm -13 /tmp/rpms-base.txt /tmp/rpm
 #### Example for enabling a System Unit File
 
 systemctl enable podman.socket
+# Installs the Flatpak apps in /usr/share/flatpak/preinstall.d at boot (IVA-43)
+systemctl enable bronk-flatpak-preinstall.service
 
 #### Smoke checks: fail the build if an installed tool doesn't run (IVA-23)
 # Keep in sync with the dnf5 install list above: "<package> <command to run>"
@@ -105,6 +107,8 @@ uv       uv --version
 zoxide   zoxide --version
 CHECKS
 systemctl is-enabled podman.socket
+systemctl is-enabled bronk-flatpak-preinstall.service
+ls /usr/share/flatpak/preinstall.d/*.preinstall
 
 #### Workaround: Fedora repos for ISO builds
 # F45 ships Fedora's repo files in /usr/share/dnf5/repos.d, but bootc-image-builder
