@@ -47,6 +47,15 @@ fail() { echo "ERROR: branding: $*" >&2; exit 1; }
 [[ -f /usr/share/icons/hicolor/scalable/apps/bronk.svg ]] || fail "bronk icon missing"
 logo=$(GSETTINGS_BACKEND=memory gsettings get org.gnome.login-screen logo)
 [[ "$logo" == "'/usr/share/pixmaps/bronk-gdm-logo.png'" ]] || fail "login-screen logo is $logo"
+for key in "background picture-uri" "background picture-uri-dark" "screensaver picture-uri"; do
+    uri=$(GSETTINGS_BACKEND=memory gsettings get org.gnome.desktop.${key})
+    file=${uri#\'file://}; file=${file%\'}
+    [[ "$file" == /usr/share/backgrounds/bronk/* && -f "$file" ]] || fail "org.gnome.desktop.${key} is ${uri}"
+done
+xmllint --noout /usr/share/gnome-background-properties/bronk.xml || fail "bronk.xml doesn't parse"
+for f in $(grep -o '/usr/share/backgrounds/bronk/[^<]*' /usr/share/gnome-background-properties/bronk.xml); do
+    [[ -f "$f" ]] || fail "bronk.xml lists missing wallpaper $f"
+done
 cmp -s /usr/share/bronk/plymouth-watermark.png <(lsinitrd -f usr/share/plymouth/themes/spinner/watermark.png "/usr/lib/modules/${kver}/initramfs.img") \
     || fail "initramfs doesn't have the bronk Plymouth watermark"
 fastfetch --config /etc/xdg/fastfetch/config.jsonc --pipe true --structure OS | grep -q bronk \

@@ -76,6 +76,9 @@ echo "Base package check passed; $(LC_ALL=C comm -13 /tmp/rpms-base.txt /tmp/rpm
 ### Fonts: IosevkaTerm and JetBrains Mono Nerd Fonts (IVA-66)
 /ctx/fonts.sh
 
+### kanata binary (IVA-71)
+/ctx/kanata.sh
+
 # Use a COPR Example:
 #
 # dnf5 -y copr enable ublue-os/staging
@@ -96,7 +99,7 @@ systemctl enable bronk-flatpak-preinstall.service
 /ctx/branding.sh
 
 #### Smoke checks: fail the build if an installed tool doesn't run (IVA-23)
-# Keep in sync with the dnf5 install list above: "<package> <command to run>"
+# Keep in sync with the dnf5 install list above, plus kanata (kanata.sh): "<package> <command to run>"
 # The build has no terminal; TERM is set because some tools (ranger) need one even for --version.
 while read -r pkg cmd; do
     if ! out=$(TERM=xterm-256color bash -c "$cmd" </dev/null 2>&1); then
@@ -119,7 +122,9 @@ ripgrep  rg --version
 tldr     tldr --version
 uv       uv --version
 zoxide   zoxide --version
+kanata   kanata --version
 CHECKS
+systemd-sysusers --dry-run /usr/lib/sysusers.d/bronk-groups.conf
 systemctl is-enabled podman.socket
 systemctl is-enabled bronk-flatpak-preinstall.service
 ls /usr/share/flatpak/preinstall.d/*.preinstall
