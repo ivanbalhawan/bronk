@@ -1,0 +1,18 @@
+[Unit]
+Description=Install the Flatpak apps listed in preinstall.d
+Documentation=man:flatpak-preinstall(1)
+Wants=network-online.target
+# ublue's service adds the Flathub remote on first boot
+After=network-online.target flatpak-add-fedora-repos.service
+
+[Service]
+Type=oneshot
+# Installs listed apps that aren't installed yet. Flatpak remembers what it
+# preinstalled, so an app you uninstall isn't installed again.
+ExecStart=/usr/bin/flatpak preinstall --system --assumeyes --noninteractive
+# Retry if Flathub can't be reached yet (slow Wi-Fi on first boot)
+Restart=on-failure
+RestartSec=60
+
+[Install]
+WantedBy=multi-user.target
