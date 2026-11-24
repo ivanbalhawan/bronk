@@ -5,16 +5,16 @@
 [org.gnome.login-screen]
 logo='/usr/share/pixmaps/bronk-gdm-logo.png'
 
-# Default wallpaper: Yggdrasil, light and dark (IVA-68). All 7 designs are
+# Default wallpaper: Terminal grid, light and dark (IVA-68). All 7 designs are
 # listed in Settings > Appearance via gnome-background-properties/bronk.xml.
 [org.gnome.desktop.background]
-picture-uri='file:///usr/share/backgrounds/bronk/bronk-yggdrasil-light.png'
-picture-uri-dark='file:///usr/share/backgrounds/bronk/bronk-yggdrasil-dark.png'
+picture-uri='file:///usr/share/backgrounds/bronk/bronk-terminal-grid-light.png'
+picture-uri-dark='file:///usr/share/backgrounds/bronk/bronk-terminal-grid-dark.png'
 picture-options='zoom'
 primary-color='#0d0d0d'
 
 # Lock screen
 [org.gnome.desktop.screensaver]
-picture-uri='file:///usr/share/backgrounds/bronk/bronk-yggdrasil-dark.png'
+picture-uri='file:///usr/share/backgrounds/bronk/bronk-terminal-grid-dark.png'
 picture-options='zoom'
 primary-color='#0d0d0d'
