@@ -87,6 +87,9 @@ systemctl enable podman.socket
 # Installs the Flatpak apps in /usr/share/flatpak/preinstall.d at boot (IVA-43)
 systemctl enable bronk-flatpak-preinstall.service
 
+### Branding: os-release name, logos, login screen, boot splash, fastfetch (IVA-65)
+/ctx/branding.sh
+
 #### Smoke checks: fail the build if an installed tool doesn't run (IVA-23)
 # Keep in sync with the dnf5 install list above: "<package> <command to run>"
 # The build has no terminal; TERM is set because some tools (ranger) need one even for --version.

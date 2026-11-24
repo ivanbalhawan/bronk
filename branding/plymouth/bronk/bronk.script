@@ -1,0 +1,93 @@
+# bronk_ boot splash
+# Black screen, the b centred, the orange cursor blinking beside it.
+# Also handles the LUKS passphrase prompt and boot messages.
+
+Window.SetBackgroundTopColor(0, 0, 0);
+Window.SetBackgroundBottomColor(0, 0, 0);
+
+b_image   = Image("b.png");
+cur_image = Image("cursor.png");
+
+# The mark is drawn on a 64-unit grid; the cursor sits at (48, 50) in it.
+mark_size = b_image.GetWidth();
+unit      = mark_size / 64;
+
+mark_x = Window.GetX() + Window.GetWidth()  / 2 - mark_size / 2;
+mark_y = Window.GetY() + Window.GetHeight() / 2 - mark_size / 2 - 40;
+
+b_sprite = Sprite(b_image);
+b_sprite.SetPosition(mark_x, mark_y, 1);
+
+cur_sprite = Sprite(cur_image);
+cur_sprite.SetPosition(mark_x + 48 * unit, mark_y + 50 * unit, 2);
+
+# ---- blink -----------------------------------------------------------------
+# Plymouth calls the refresh function ~50 times a second.
+# Visible for 30 frames, hidden for 25: roughly the terminal blink rate.
+global.tick = 0;
+
+fun refresh_callback() {
+    global.tick = global.tick + 1;
+    phase = global.tick - Math.Int(global.tick / 55) * 55;
+    if (phase < 30)
+        global.cur_sprite.SetOpacity(1);
+    else
+        global.cur_sprite.SetOpacity(0);
+}
+Plymouth.SetRefreshFunction(refresh_callback);
+
+# ---- status line (under the mark) -------------------------------------------
+status_sprite = Sprite();
+global.status_sprite.SetZ(3);
+
+fun set_status(text, r, g, b) {
+    img = Image.Text(text, r, g, b);
+    global.status_sprite.SetImage(img);
+    global.status_sprite.SetPosition(Window.GetX() + Window.GetWidth() / 2 - img.GetWidth() / 2,
+                              global.mark_y + global.mark_size + 48, 3);
+    global.status_sprite.SetOpacity(1);
+}
+
+fun clear_status() {
+    global.status_sprite.SetOpacity(0);
+}
+
+# ---- passphrase prompt ------------------------------------------------------
+fun display_password_callback(prompt, bullets) {
+    line = "unlock";
+    if (prompt != "") line = prompt;
+    line = line + "  ";
+    for (i = 0; i < bullets; i = i + 1)
+        line = line + "*";
+    set_status(line, 0.96, 0.96, 0.94);
+}
+
+fun display_question_callback(prompt, entry) {
+    set_status(prompt + "  " + entry, 0.96, 0.96, 0.94);
+}
+
+fun display_normal_callback() {
+    clear_status();
+}
+
+Plymouth.SetDisplayPasswordFunction(display_password_callback);
+Plymouth.SetDisplayQuestionFunction(display_question_callback);
+Plymouth.SetDisplayNormalFunction(display_normal_callback);
+
+# ---- messages (e.g. "Press Ctrl+C to cancel" from fsck) -----------------------
+message_sprite = Sprite();
+global.message_sprite.SetZ(3);
+
+fun message_callback(text) {
+    img = Image.Text(text, 0.64, 0.64, 0.64);
+    global.message_sprite.SetImage(img);
+    global.message_sprite.SetPosition(Window.GetX() + Window.GetWidth() / 2 - img.GetWidth() / 2,
+                               Window.GetY() + Window.GetHeight() - 64, 3);
+}
+Plymouth.SetMessageFunction(message_callback);
+
+# ---- shutdown / reboot --------------------------------------------------------
+fun quit_callback() {
+    global.cur_sprite.SetOpacity(0);
+}
+Plymouth.SetQuitFunction(quit_callback);

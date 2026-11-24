@@ -1,0 +1,4 @@
+# bronk logo at the bottom of the login screen (IVA-65).
+# "zz1-" sorts after the base image's org.gnome.login-screen.gschema.override, so this wins.
+[org.gnome.login-screen]
+logo='/usr/share/pixmaps/bronk-gdm-logo.png'
