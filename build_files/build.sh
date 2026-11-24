@@ -26,6 +26,11 @@ jq -e '.transports.docker["ghcr.io/ivanbalhawan/bronk"][0].keyPath == "/etc/pki/
 # come from negativo17's fedora-multimedia repo. Don't add RPM Fusion, its
 # packages conflict with negativo17's (IVA-45).
 
+# Replace the Firefox package with the Flathub version (in preinstall.d, IVA-43).
+# Both use the org.mozilla.firefox app ID, so the dock pin and default browser
+# in GNOME's defaults keep working. Done before the guard below on purpose.
+dnf5 remove -y firefox firefox-langpacks
+
 # Guard: record the base image's packages, to check below that the install
 # doesn't change any of them (IVA-23)
 rpm_list() { rpm -qa --qf '%{NAME}.%{ARCH} %{EVR}\n' | grep -v '^gpg-pubkey' | LC_ALL=C sort; }
@@ -109,6 +114,7 @@ CHECKS
 systemctl is-enabled podman.socket
 systemctl is-enabled bronk-flatpak-preinstall.service
 ls /usr/share/flatpak/preinstall.d/*.preinstall
+if rpm -q firefox; then echo "ERROR: firefox package still installed" >&2; exit 1; fi
 
 #### Workaround: Fedora repos for ISO builds
 # F45 ships Fedora's repo files in /usr/share/dnf5/repos.d, but bootc-image-builder
