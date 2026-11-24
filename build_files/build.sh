@@ -71,7 +71,8 @@ if [[ -n "$changed" ]]; then
 fi
 echo "Base package check passed; $(LC_ALL=C comm -13 /tmp/rpms-base.txt /tmp/rpms-after.txt | wc -l) packages added (or allowed changes)"
 
-
+### Fonts: IosevkaTerm and JetBrains Mono Nerd Fonts (IVA-66)
+/ctx/fonts.sh
 
 # Use a COPR Example:
 #

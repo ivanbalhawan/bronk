@@ -6,6 +6,19 @@
 
   "rebaseWhen": "never",
 
+  // Versions in build scripts, marked with a comment on the line above:
+  //   # renovate: datasource=github-releases depName=owner/repo
+  //   SOME_VERSION="v1.2.3"
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^build_files/.+\\.sh$/"],
+      "matchStrings": [
+        "# renovate: datasource=(?<datasource>\\S+) depName=(?<depName>\\S+)\\n[A-Z_]+=\"?(?<currentValue>[^\"\\s]+)\"?",
+      ],
+    },
+  ],
+
   "packageRules": [
     {
       "automerge": true,
