@@ -30,6 +30,8 @@ jq -e '.transports.docker["ghcr.io/ivanbalhawan/bronk"][0].keyPath == "/etc/pki/
 # Both use the org.mozilla.firefox app ID, so the dock pin and default browser
 # in GNOME's defaults keep working. Done before the guard below on purpose.
 dnf5 remove -y firefox firefox-langpacks
+# htop and nvtop: Resources and btop cover them (IVA-67). Nothing depends on either.
+dnf5 remove -y htop nvtop
 
 # Guard: record the base image's packages, to check below that the install
 # doesn't change any of them (IVA-23)
@@ -79,6 +81,9 @@ echo "Base package check passed; $(LC_ALL=C comm -13 /tmp/rpms-base.txt /tmp/rpm
 # dnf5 -y install package
 # Disable COPRs so they don't end up enabled on the final image:
 # dnf5 -y copr disable ublue-os/staging
+
+### App grid: hide extras, default folders (IVA-67)
+/ctx/launcher.sh
 
 #### Example for enabling a System Unit File
 
