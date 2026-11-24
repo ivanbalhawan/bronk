@@ -7,11 +7,11 @@ folder-children=['Utilities', 'System', 'Tweaks']
 
 [org/gnome/desktop/app-folders/folders/Utilities]
 name='Utilities'
-apps=['org.gnome.Calculator.desktop', 'org.gnome.clocks.desktop', 'org.gnome.Weather.desktop', 'org.gnome.Snapshot.desktop', 'org.gnome.Loupe.desktop', 'org.gnome.Papers.desktop']
+apps=['org.gnome.Calculator.desktop', 'org.gnome.clocks.desktop', 'org.gnome.Weather.desktop', 'org.gnome.Loupe.desktop', 'org.gnome.Papers.desktop']
 
 [org/gnome/desktop/app-folders/folders/System]
 name='System'
-apps=['net.nokyan.Resources.desktop', 'org.gnome.DiskUtility.desktop', 'org.gnome.baobab.desktop', 'org.gnome.Logs.desktop', 'org.fedoraproject.MediaWriter.desktop', 'io.github.v81d.Wattage.desktop', 'com.github.marhkb.Pods.desktop']
+apps=['net.nokyan.Resources.desktop', 'org.gnome.DiskUtility.desktop', 'org.gnome.baobab.desktop', 'org.gnome.Logs.desktop', 'org.fedoraproject.MediaWriter.desktop', 'io.github.v81d.Wattage.desktop']
 
 [org/gnome/desktop/app-folders/folders/Tweaks]
 name='Tweaks'
