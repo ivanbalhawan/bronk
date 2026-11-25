@@ -98,6 +98,9 @@ systemctl enable bronk-flatpak-preinstall.service
 ### Branding: os-release name, logos, login screen, boot splash, fastfetch (IVA-65)
 /ctx/branding.sh
 
+### Default keyboard shortcuts and accent color: checks only, settings are in system_files/ (IVA-72)
+/ctx/desktop.sh
+
 #### Smoke checks: fail the build if an installed tool doesn't run (IVA-23)
 # Keep in sync with the dnf5 install list above, plus kanata (kanata.sh): "<package> <command to run>"
 # The build has no terminal; TERM is set because some tools (ranger) need one even for --version.
