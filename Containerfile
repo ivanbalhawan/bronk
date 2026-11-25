@@ -2,7 +2,7 @@
 FROM scratch AS ctx
 COPY build_files /
 COPY system_files /system_files
-COPY cosign.pub /cosign.pub
+COPY cosign.pub cosign-standby.pub /
 
 # Base Image
 FROM ghcr.io/ublue-os/silverblue-main:45
