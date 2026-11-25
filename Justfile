@@ -463,3 +463,52 @@ format:
     fi
     # Run shfmt on all Bash scripts
     find . -iname "*.sh" -type f -exec shfmt --write "{}" ';'
+
+# Promote the standby signing key to active and make a new standby (docs/signing.md)
+[group('Signing')]
+rotate-key standby_key="cosign-standby.key":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    key="{{ standby_key }}"
+    [ -f "$key" ] || { echo "Put the standby private key at $key first (from the password manager)." >&2; exit 1; }
+    if [ "$(COSIGN_PASSWORD="" cosign public-key --key "$key")" != "$(cat cosign-standby.pub)" ]; then
+        echo "$key does not match cosign-standby.pub. Wrong key?" >&2
+        exit 1
+    fi
+    if ! git diff --quiet HEAD -- cosign.pub cosign-standby.pub; then
+        echo "cosign.pub or cosign-standby.pub has uncommitted changes. Commit or revert them first." >&2
+        exit 1
+    fi
+    echo "Setting SIGNING_SECRET to the standby key..."
+    gh secret set SIGNING_SECRET < "$key"
+    rm -f "$key"
+    mv cosign-standby.pub cosign.pub
+    just _new-standby-key
+    git add cosign.pub cosign-standby.pub
+    git commit -m "Rotate cosign key: promote standby, add new standby"
+    echo
+    echo "Done. Now:"
+    echo "  1. In the password manager: mark the old standby entry as the active key,"
+    echo "     delete the old active key, and save cosign-standby.key as the new standby."
+    echo "  2. rm cosign-standby.key"
+    echo "  3. Push (via a PR to main). The next image is signed with the new active key."
+
+# Replace only the standby key, e.g. if it was lost or leaked (docs/signing.md)
+[group('Signing')]
+replace-standby-key:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    just _new-standby-key
+    git add cosign-standby.pub
+    git commit -m "Replace standby cosign key"
+    echo
+    echo "Done. Save cosign-standby.key in the password manager as the new standby,"
+    echo "replacing the old one, then rm cosign-standby.key and push (via a PR to main)."
+
+[private]
+_new-standby-key:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    rm -f cosign-standby.pub cosign-standby.key
+    COSIGN_PASSWORD="" cosign generate-key-pair --output-key-prefix cosign-standby
+    git check-ignore -q cosign-standby.key || { echo "cosign-standby.key is not gitignored!" >&2; exit 1; }

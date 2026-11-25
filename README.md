@@ -34,6 +34,8 @@ systemctl reboot
 cosign verify --key cosign.pub ghcr.io/ivanbalhawan/bronk:latest
 ```
 
+Keys, backups and rotation: [`docs/signing.md`](./docs/signing.md).
+
 ## Rollback
 
 ```bash
