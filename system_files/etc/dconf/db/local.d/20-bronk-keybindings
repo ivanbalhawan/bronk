@@ -1,0 +1,18 @@
+# Custom keyboard shortcuts (IVA-72). They use relocatable schemas, which a
+# gschema override can't set, so they live in the dconf system db. Compiled
+# by `dconf update` in build_files/launcher.sh. The built-in shortcuts are in
+# zz1-bronk.gschema.override. Changing a shortcut in Settings overrides this
+# for that user.
+
+[org/gnome/settings-daemon/plugins/media-keys]
+custom-keybindings=['/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0/', '/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1/']
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom0]
+name='Terminal'
+binding='<Super>t'
+command='ptyxis -s'
+
+[org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom1]
+name='Resources'
+binding='<Shift><Control>Escape'
+command='flatpak run net.nokyan.Resources'

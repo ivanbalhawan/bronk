@@ -18,3 +18,23 @@ primary-color='#0d0d0d'
 picture-uri='file:///usr/share/backgrounds/bronk/bronk-terminal-grid-dark.png'
 picture-options='zoom'
 primary-color='#0d0d0d'
+
+# Accent color (IVA-72). GNOME only takes named accents; orange is the
+# closest to the brand orange (#ff6a00).
+[org.gnome.desktop.interface]
+accent-color='orange'
+
+# Keyboard shortcuts (IVA-72). The custom ones (terminal, Resources) are in
+# /etc/dconf/db/local.d/20-bronk-keybindings: a gschema override can't set them.
+[org.gnome.desktop.wm.keybindings]
+close=['<Super>q']
+cycle-windows=['<Alt>Tab']
+cycle-windows-backward=['<Shift><Alt>Tab']
+switch-applications=@as []
+switch-applications-backward=@as []
+toggle-fullscreen=['<Super>f']
+toggle-maximized=['<Shift><Super>f']
+
+[org.gnome.settings-daemon.plugins.media-keys]
+screensaver=['<Shift><Super>l']
+www=['<Super>b']
