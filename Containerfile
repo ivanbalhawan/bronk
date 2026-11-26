@@ -19,8 +19,8 @@ FROM ghcr.io/ublue-os/silverblue-main:45
 # RUN rm /opt && mkdir /opt
 
 ### MODIFICATIONS
-## make modifications desired in your image and install packages by modifying the build.sh script
-## the following RUN directive does all the things required to run "build.sh" as recommended.
+## build.sh runs the numbered scripts in build_files/ in order; add or edit those
+## the following RUN directive runs "build.sh" as recommended.
 
 RUN --mount=type=bind,from=ctx,source=/,target=/ctx \
     --mount=type=cache,dst=/var/cache \

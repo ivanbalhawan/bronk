@@ -1,6 +1,6 @@
 # bronk_ brand kit
 
-> **How the image uses this kit** (IVA-65, `build_files/branding.sh`):
+> **How the image uses this kit** (IVA-65, `build_files/70-branding.sh`):
 >
 > - `svg/bronk-icon.svg` and `png/bronk-icon/*` are installed as the `bronk` icon in `system_files/usr/share/icons/hicolor/`. `LOGO=bronk` in os-release points at it.
 > - `system_files/usr/share/pixmaps/bronk-gdm-logo.png` (login screen) and `system_files/usr/share/bronk/plymouth-watermark.png` (boot splash) are `png/bronk-lockup-1024w.png` scaled to 96 px and 43 px high.

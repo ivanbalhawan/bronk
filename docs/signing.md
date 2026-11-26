@@ -10,7 +10,7 @@ one of the two public keys baked into the image:
 
 Both public keys end up in `/etc/pki/containers/` and in one `sigstoreSigned`
 entry in `/etc/containers/policy.json` via `keyPaths` (see
-`build_files/build.sh`). `keyPaths` means "signed by any of these keys". Don't
+`build_files/20-signing.sh`). `keyPaths` means "signed by any of these keys". Don't
 split it into two entries: the entries are ANDed, so every image would need
 both signatures.
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# App grid cleanup (IVA-67). Called by build.sh after the package install.
+# App grid cleanup (IVA-67). Runs after 30-packages.sh.
 # Folders come from system_files/etc/dconf/db/local.d/10-bronk-app-folders.
 
 set -ouex pipefail
