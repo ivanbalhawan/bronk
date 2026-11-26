@@ -1,0 +1,40 @@
+---
+name: Clean up old GHCR images
+# Every build pushes a ~3.2 GB image version plus a cosign .sig version, and old
+# versions keep their date tags, so "delete untagged" alone removes nothing.
+# This keeps the newest 8 tagged images (plus whatever `latest` and `45` point
+# to) and deletes the rest along with their signatures. (IVA-30)
+on:
+  schedule:
+    - cron: '0 6 * * 2'  # 06:00 UTC every Tuesday, a day after the weekly build
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Only log what would be deleted'
+        type: boolean
+        default: true
+
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: false
+
+jobs:
+  cleanup:
+    name: Delete old image versions
+    runs-on: ubuntu-26.04
+
+    permissions:
+      packages: write
+
+    steps:
+      - name: Clean up GHCR
+        uses: dataaxiom/ghcr-cleanup-action@ac45a8c04b1eb4b27974ca79a0a74f344c93664b # v1.3.0
+        with:
+          package: bronk
+          keep-n-tagged: 8
+          exclude-tags: latest,45
+          delete-untagged: true
+          delete-orphaned-images: true
+          # Scheduled runs stay in dry-run until a manual dry run has been
+          # reviewed. Then change this to: inputs.dry_run || false
+          dry-run: ${{ github.event_name == 'schedule' || inputs.dry_run }}
