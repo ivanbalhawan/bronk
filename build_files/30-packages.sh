@@ -34,6 +34,7 @@ dnf5 install -y \
     pipx \
     ranger \
     ripgrep \
+    tailscale \
     tldr \
     uv \
     zoxide

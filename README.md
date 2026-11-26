@@ -10,8 +10,8 @@ image: machine-specific secrets are set up on the machine after install.
 ## What's different from silverblue-main
 
 - Extra packages: `bat`, `btop`, `eza`, `fastfetch`, `fd-find`, `fzf`, `neovim`,
-  `pipx`, `ranger`, `ripgrep`, `tldr`, `uv`, `zoxide`
-- `podman.socket` enabled
+  `pipx`, `ranger`, `ripgrep`, `tailscale`, `tldr`, `uv`, `zoxide`
+- `podman.socket` and `tailscaled.service` enabled
 - Anything under [`system_files/`](./system_files) is copied onto `/`
 
 ## Using it
@@ -27,6 +27,18 @@ systemctl reboot
 sudo rpm-ostree rebase ostree-image-signed:docker://ghcr.io/ivanbalhawan/bronk:latest
 systemctl reboot
 ```
+
+### Tailscale
+
+The image ships Tailscale but no login. Join each machine to the tailnet once
+after install:
+
+```bash
+sudo tailscale up
+sudo tailscale set --operator=$USER   # optional: run tailscale without sudo
+```
+
+The login lives in `/var/lib/tailscale`, so image updates and rollbacks keep it.
 
 ## Verifying the signature
 

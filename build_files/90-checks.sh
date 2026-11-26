@@ -24,6 +24,7 @@ neovim   nvim --version
 pipx     pipx --version
 ranger   ranger --version
 ripgrep  rg --version
+tailscale tailscale version
 tldr     tldr --version
 uv       uv --version
 zoxide   zoxide --version
@@ -32,5 +33,6 @@ CHECKS
 systemd-sysusers --dry-run /usr/lib/sysusers.d/bronk-groups.conf
 systemctl is-enabled podman.socket
 systemctl is-enabled bronk-flatpak-preinstall.service
+systemctl is-enabled tailscaled.service
 ls /usr/share/flatpak/preinstall.d/*.preinstall
 if rpm -q firefox; then echo "ERROR: firefox package still installed" >&2; exit 1; fi
