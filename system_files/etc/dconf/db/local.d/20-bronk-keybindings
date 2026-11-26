@@ -1,6 +1,6 @@
 # Custom keyboard shortcuts (IVA-72). They use relocatable schemas, which a
 # gschema override can't set, so they live in the dconf system db. Compiled
-# by `dconf update` in build_files/launcher.sh. The built-in shortcuts are in
+# by `dconf update` in build_files/50-launcher.sh. The built-in shortcuts are in
 # zz1-bronk.gschema.override. Changing a shortcut in Settings overrides this
 # for that user.
 

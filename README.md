@@ -48,7 +48,7 @@ sudo bootc rollback && systemctl reboot   # or pick the previous entry in the bo
 | --- | --- |
 | Image name, description, tags, BIB image | [`image-template.env`](./image-template.env) |
 | Base image | [`Containerfile`](./Containerfile) |
-| Packages, services, other changes | [`build_files/build.sh`](./build_files/build.sh) |
+| Packages, services, other changes | numbered scripts in [`build_files/`](./build_files), run in order by [`build.sh`](./build_files/build.sh) |
 | Files to drop onto `/` | [`system_files/`](./system_files) |
 | CI build, sign and push | [`.github/workflows/build.yml`](./.github/workflows/build.yml) |
 | Installer ISO settings | [`disk_config/iso.toml`](./disk_config/iso.toml) |

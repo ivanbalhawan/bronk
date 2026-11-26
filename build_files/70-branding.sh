@@ -1,5 +1,5 @@
 #!/bin/bash
-# bronk name and logo wherever the OS shows them (IVA-65). Called by build.sh,
+# bronk name and logo wherever the OS shows them (IVA-65). Runs
 # after system_files/ is copied in. Source artwork lives in branding/.
 
 set -ouex pipefail

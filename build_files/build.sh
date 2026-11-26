@@ -1,151 +1,22 @@
 #!/bin/bash
+# Runs the numbered build scripts next to it, in order (IVA-49):
+#   10-files     system_files/ onto /
+#   20-signing   image signature trust (docs/signing.md)
+#   30-packages  dnf5 removals and installs, base-package guard
+#   40-fonts     Nerd Fonts (IVA-66)
+#   45-kanata    kanata binary (IVA-71)
+#   50-launcher  app grid: hide extras, default folders (IVA-67)
+#   60-services  systemd units to enable
+#   70-branding  os-release, logos, login screen, boot splash (IVA-65)
+#   80-desktop   checks for the default shortcuts and accent color (IVA-72)
+#   90-checks    smoke checks
+#   99-iso-repos Fedora repos for ISO builds; keep it last
+# To add a step, add an executable NN-name.sh; the number sets its place.
 
 set -ouex pipefail
 
-# Copy the contents of system_files/ of the git repo to /
-cp -avf "/ctx/system_files"/. /
-
-### Trust config: only accept bronk images signed with one of our cosign keys
-# cosign.pub signs today's images; cosign-standby.pub is the next key, trusted
-# ahead of time so a rotation needs no transition period (docs/signing.md).
-# keyPaths is "any of these keys". Two separate sigstoreSigned entries would
-# instead require BOTH signatures. The matching registries.d/bronk.yaml comes
-# from system_files/.
-if cmp -s /ctx/cosign.pub /ctx/cosign-standby.pub; then
-    echo "cosign.pub and cosign-standby.pub are the same key; see docs/signing.md" >&2
-    exit 1
-fi
-install -Dm644 /ctx/cosign.pub /etc/pki/containers/bronk.pub
-install -Dm644 /ctx/cosign-standby.pub /etc/pki/containers/bronk-standby.pub
-# Add our entry to ublue's policy.json instead of replacing the file, so their rules stay.
-jq '.transports.docker["ghcr.io/ivanbalhawan/bronk"] = [{
-      "type": "sigstoreSigned",
-      "keyPaths": ["/etc/pki/containers/bronk.pub", "/etc/pki/containers/bronk-standby.pub"],
-      "signedIdentity": {"type": "matchRepository"}
-    }]' /etc/containers/policy.json > /tmp/policy.json
-mv /tmp/policy.json /etc/containers/policy.json
-chmod 644 /etc/containers/policy.json
-# Fail the build if the entry is missing.
-jq -e '.transports.docker["ghcr.io/ivanbalhawan/bronk"][0].keyPaths | length == 2' /etc/containers/policy.json
-
-### Install packages
-
-# Packages can be installed from any enabled yum repo on the image.
-# ublue main images don't ship RPM Fusion: codecs (ffmpeg, Mesa VA-API drivers)
-# come from negativo17's fedora-multimedia repo. Don't add RPM Fusion, its
-# packages conflict with negativo17's (IVA-45).
-
-# Replace the Firefox package with the Flathub version (in preinstall.d, IVA-43).
-# Both use the org.mozilla.firefox app ID, so the dock pin and default browser
-# in GNOME's defaults keep working. Done before the guard below on purpose.
-dnf5 remove -y firefox firefox-langpacks
-# htop and nvtop: Resources and btop cover them (IVA-67). Nothing depends on either.
-dnf5 remove -y htop nvtop
-
-# Guard: record the base image's packages, to check below that the install
-# doesn't change any of them (IVA-23)
-rpm_list() { rpm -qa --qf '%{NAME}.%{ARCH} %{EVR}\n' | grep -v '^gpg-pubkey' | LC_ALL=C sort; }
-rpm_list > /tmp/rpms-base.txt
-
-# this installs a package from fedora repos
-dnf5 install -y \
-    bat \
-    btop \
-    eza \
-    fastfetch \
-    fd-find \
-    fzf \
-    neovim \
-    pipx \
-    ranger \
-    ripgrep \
-    tldr \
-    uv \
-    zoxide
-
-# Guard: fail if the install upgraded, downgraded or removed any base package.
-# dnf5 uses the live Fedora repos, which can be ahead of the base image (a partial
-# upgrade) or replace a package ublue swapped or pinned. When this trips, decide
-# on purpose: wait a day for the base to catch up, drop the package, or allow
-# that one change by adding its NAME.ARCH below.
-ALLOWED_BASE_CHANGES=()
-rpm_list > /tmp/rpms-after.txt
-changed=$(LC_ALL=C comm -23 /tmp/rpms-base.txt /tmp/rpms-after.txt)
-for allowed in "${ALLOWED_BASE_CHANGES[@]}"; do
-    changed=$(grep -v "^${allowed} " <<<"$changed" || true)
+scripts=("$(dirname "$0")"/[0-9][0-9]-*.sh)
+[[ -e "${scripts[0]}" ]] || { echo "ERROR: no numbered build scripts found" >&2; exit 1; }
+for script in "${scripts[@]}"; do
+    "$script"
 done
-if [[ -n "$changed" ]]; then
-    set +x
-    echo "ERROR: the package install changed base image packages (old versions shown):" >&2
-    echo "$changed" >&2
-    exit 1
-fi
-echo "Base package check passed; $(LC_ALL=C comm -13 /tmp/rpms-base.txt /tmp/rpms-after.txt | wc -l) packages added (or allowed changes)"
-
-### Fonts: IosevkaTerm and JetBrains Mono Nerd Fonts (IVA-66)
-/ctx/fonts.sh
-
-### kanata binary (IVA-71)
-/ctx/kanata.sh
-
-# Use a COPR Example:
-#
-# dnf5 -y copr enable ublue-os/staging
-# dnf5 -y install package
-# Disable COPRs so they don't end up enabled on the final image:
-# dnf5 -y copr disable ublue-os/staging
-
-### App grid: hide extras, default folders (IVA-67)
-/ctx/launcher.sh
-
-#### Example for enabling a System Unit File
-
-systemctl enable podman.socket
-# Installs the Flatpak apps in /usr/share/flatpak/preinstall.d at boot (IVA-43)
-systemctl enable bronk-flatpak-preinstall.service
-
-### Branding: os-release name, logos, login screen, boot splash, fastfetch (IVA-65)
-/ctx/branding.sh
-
-### Default keyboard shortcuts and accent color: checks only, settings are in system_files/ (IVA-72)
-/ctx/desktop.sh
-
-#### Smoke checks: fail the build if an installed tool doesn't run (IVA-23)
-# Keep in sync with the dnf5 install list above, plus kanata (kanata.sh): "<package> <command to run>"
-# The build has no terminal; TERM is set because some tools (ranger) need one even for --version.
-while read -r pkg cmd; do
-    if ! out=$(TERM=xterm-256color bash -c "$cmd" </dev/null 2>&1); then
-        set +x
-        echo "ERROR: ${pkg}: '${cmd}' failed:" >&2
-        echo "$out" >&2
-        exit 1
-    fi
-done <<'CHECKS'
-bat      bat --version
-btop     btop --version
-eza      eza --version
-fastfetch fastfetch --version
-fd-find  fd --version
-fzf      fzf --version
-neovim   nvim --version
-pipx     pipx --version
-ranger   ranger --version
-ripgrep  rg --version
-tldr     tldr --version
-uv       uv --version
-zoxide   zoxide --version
-kanata   kanata --version
-CHECKS
-systemd-sysusers --dry-run /usr/lib/sysusers.d/bronk-groups.conf
-systemctl is-enabled podman.socket
-systemctl is-enabled bronk-flatpak-preinstall.service
-ls /usr/share/flatpak/preinstall.d/*.preinstall
-if rpm -q firefox; then echo "ERROR: firefox package still installed" >&2; exit 1; fi
-
-#### Workaround: Fedora repos for ISO builds
-# F45 ships Fedora's repo files in /usr/share/dnf5/repos.d, but bootc-image-builder
-# (anaconda-iso) only reads /etc/yum.repos.d, so ISO builds can't find any packages.
-# Copies in /etc override the vendor files of the same name, so dnf sees no duplicates.
-# Keep this last so a dnf upgrade above can't leave the copies stale.
-# Remove once bootc-image-builder reads /usr/share/dnf5/repos.d.
-cp -v /usr/share/dnf5/repos.d/fedora*.repo /etc/yum.repos.d/

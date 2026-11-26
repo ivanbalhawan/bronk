@@ -1,5 +1,5 @@
 #!/bin/bash
-# Terminal fonts from the Nerd Fonts release (IVA-66). Called by build.sh.
+# Terminal fonts from the Nerd Fonts release (IVA-66).
 #
 # Only the "Nerd Font Mono" family in Regular, Bold, Italic and Bold Italic:
 # that's what the terminals use, and the full IosevkaTerm set is 1.1 GB.

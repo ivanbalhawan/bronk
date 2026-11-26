@@ -1,6 +1,6 @@
 #!/bin/bash
 # Checks for the default keyboard shortcuts and accent color (IVA-72).
-# Called by build.sh after branding.sh, which compiles the gschema overrides.
+# Runs after 70-branding.sh, which compiles the gschema overrides.
 # The settings themselves are in system_files/: zz1-bronk.gschema.override
 # and /etc/dconf/db/local.d/20-bronk-keybindings.
 

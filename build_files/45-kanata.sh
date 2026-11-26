@@ -1,5 +1,5 @@
 #!/bin/bash
-# kanata keyboard remapper binary (IVA-71). Called by build.sh.
+# kanata keyboard remapper binary (IVA-71).
 # Only the binary: the config, user service and udev rule come from the dotfiles.
 # The uinput group it needs is in system_files/usr/lib/sysusers.d/bronk-groups.conf.
 
@@ -12,7 +12,7 @@ KANATA_VERSION="v1.12.0"
 release="https://github.com/jtroo/kanata/releases/download/${KANATA_VERSION}"
 work=$(mktemp -d)
 
-# Checksums come from the same release, as for the Nerd Fonts (fonts.sh).
+# Checksums come from the same release, as for the Nerd Fonts (40-fonts.sh).
 curl -fsSL --retry 3 -o "$work/sha256sums" "${release}/sha256sums"
 curl -fsSL --retry 3 -o "$work/linux-binaries-x64.zip" "${release}/linux-binaries-x64.zip"
 (cd "$work" && grep -E '^[0-9a-f]{64}  linux-binaries-x64\.zip$' sha256sums | sha256sum -c -)
