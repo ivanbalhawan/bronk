@@ -130,11 +130,29 @@ jobs:
           ALIAS_TAGS: ${{ steps.gen-build-tags.outputs.alias_tags }}
         run: |
           set -euox pipefail
-          for tag in ${ALIAS_TAGS}; do
-            podman push --digestfile=/tmp/digestfile ${IMAGE_NAME}:${tag} ${IMAGE_REGISTRY}/${IMAGE_NAME}:${tag}
+          # Push once, then point the other tags at that exact manifest. Pushing
+          # each tag with podman rebuilds the manifest every time, and the first
+          # push came out different, so that tag got an unsigned twin (IVA-78).
+          read -r first rest <<< "${ALIAS_TAGS}"
+          podman push --digestfile=/tmp/digestfile ${IMAGE_NAME}:${first} ${IMAGE_REGISTRY}/${IMAGE_NAME}:${first}
+          digest=$(< /tmp/digestfile)
+
+          # Registry-side copy of the same manifest bytes: no layer upload, same
+          # digest. --preserve-digests fails instead of rewriting the manifest.
+          for tag in ${rest}; do
+            skopeo copy --preserve-digests \
+              docker://${IMAGE_REGISTRY}/${IMAGE_NAME}@${digest} \
+              docker://${IMAGE_REGISTRY}/${IMAGE_NAME}:${tag}
           done
 
-          digest=$(< /tmp/digestfile)
+          # Every tag must resolve to the digest the next step signs
+          for tag in ${ALIAS_TAGS}; do
+            got="sha256:$(skopeo inspect --raw docker://${IMAGE_REGISTRY}/${IMAGE_NAME}:${tag} | sha256sum | cut -d' ' -f1)"
+            if [[ "${got}" != "${digest}" ]]; then
+              echo "ERROR: ${tag} points to ${got}, expected ${digest}" >&2
+              exit 1
+            fi
+          done
 
           echo "digest=${digest}" >> $GITHUB_OUTPUT
 
